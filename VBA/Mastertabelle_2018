@@ -1,0 +1,816 @@
+--------------------------------------------------------------------------------
+'!!!!!!!!!!!!!!!!!!!!!!!! needed for Daten_Ziehen !!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
+
+Private Function GetValue(path, file, sheet, ref)
+
+    Dim arg As String
+
+    If Right(path, 1) <> "\" Then path = path & "\"
+    If Dir(path & file) = "" Then
+        GetValue = "File Not Found"
+        Exit Function
+    End If
+
+    arg = "'" & path & "[" & file & "]" & sheet & "'!" & _
+      Range(ref).Range("A1").Address(, , xlR1C1)
+
+    GetValue = ExecuteExcel4Macro(arg)
+End Function
+
+________________________________________________________________________________
+Inhaltsverzeichnis:
+
+Sub Daten_Ziehen_0()
+Sub Daten_Ziehen_1()
+Sub Daten_Ziehen_2()
+Sub Neues_Worksheet()
+Sub Wiederholen_Neues_Worksheet()
+Sub AutosaveOn_Check()
+Sub Unter_50_löschen()
+Sub Unter_50_löschen_wiederholen()
+Sub Leere_Zeile_über_Keyword_einfügen()
+Sub Kundenexport()
+Sub Leere_Zeilen_löschen()
+Sub Sortierung_für_Swissmade()
+Sub Zellinhalt_80Zeichen_setzen_und_1000_Zeilen_Blöcke()
+Sub Check_ob_mehr_als_3_x_ausgewählt()
+Sub MatrixFormel_formatieren()
+Sub Export_für_Tester()
+Sub Status_Aktualisieren_Titel_exportiert()
+Sub Longtailsummen()
+Sub Übersicht_alle_außer_exportiert_löschen()
+Sub Export_test_löschen()
+Sub Links_ändern()
+Sub Links_generieren()
+________________________________________________________________________________
+
+--------------------------------------------------------------------------------
+
+Sub Daten_Ziehen_0()
+
+
+Dim pfad As String, datei As String, blatt As String, bereich As Range, Zelle As Object
+
+
+pfad = ActiveCell.Offset(0, 0)
+datei = ActiveCell.Offset(0, 1)
+blatt = ActiveCell.Offset(0, 2)
+Set bereich = Range("A1:A1000")
+
+For Each Zelle In bereich
+
+  Zelle = Zelle.Address(False, False)
+
+ ActiveSheet.Cells(Rows.Count, 1).End(xlUp).Offset(1).Value = GetValue(pfad, datei, blatt, Zelle)
+
+Next Zelle
+
+End Sub
+Option Explicit
+
+--------------------------------------------------------------------------------
+
+Sub Daten_Ziehen_1()
+Dim lAnzahl As String
+Dim i As Long
+Dim x As String
+Dim neuname As String
+Dim Blattname As String
+
+neuname = "Tabelle1"
+Blattname = "Tabelle1"
+
+For Each blatt In Sheets
+  If blatt.Name = Blattname Then bolflg = True
+Next blatt
+
+
+If bolflg = False Then
+
+  With ThisWorkbook
+    Sheets.Add After:=Sheets(Worksheets.Count)
+    ActiveSheet.Name = neuname
+ End With
+
+End If
+
+Sheets("Tabelle1").Select
+Range("E1").Select
+    Selection.ClearContents
+    ActiveCell.FormulaR1C1 = "=COUNTA(SverweisTabellen!R[4]C[-2]:R[999]C[-2])"
+    Range("E2").Select
+    Selection.ClearContents
+    ActiveCell.FormulaR1C1 = "Pfad"
+    Range("F2").Select
+    ActiveWindow.ScrollColumn = 2
+    Range("F2").Select
+    ActiveCell.FormulaR1C1 = "Datei"
+    Range("G2").Select
+    ActiveCell.FormulaR1C1 = "Blatt"
+    ActiveWindow.WindowState = xlNormal
+    Windows("Mastertabelle granufink.xlsm").Activate
+    Range("G2").Select
+
+Sheets("SverweisTabellen").Select
+Range("N1:N1000").Select
+    Selection.Copy
+    Sheets("Tabelle1").Select
+    Range("A1").Select
+
+    Selection.PasteSpecial Paste:=xlPasteValues, Operation:=xlNone, SkipBlanks _
+        :=False, Transpose:=False
+
+Sheets("SverweisTabellen").Select
+Range("F5:H751").Select
+    Selection.Copy
+    Sheets("Tabelle1").Select
+    Range("E3").Select
+
+    Selection.PasteSpecial Paste:=xlPasteValues, Operation:=xlNone, SkipBlanks _
+        :=False, Transpose:=False
+
+Range("E3").Select
+x = Worksheets("Tabelle1").Cells(1, 5).Value
+
+Anf:
+lAnzahl = x
+' Prüfen ob eine Zahl eingegeben wurde
+If IsNumeric(lAnzahl) Then
+    For i = 1 To CLng(lAnzahl)
+
+    Application.SendKeys "(^+t)"
+    Application.Wait (True)
+    Application.SendKeys "{Down}"
+
+    Next i
+Else
+    MsgBox "Bitte ein Zahl eingeben !", vbInformation
+    GoTo Anf
+End If
+
+--------------------------------------------------------------------------------
+
+Sub Daten_Ziehen_2()
+
+Dim Zeile As Long
+
+Dim u As Long
+
+Sheets("Tabelle1").Activate
+For Zeile = ActiveSheet.Cells(Rows.Count, 1).End(xlUp).Row To 1 Step -1
+    If Cells(Zeile, 1) = "0" Then u = 1 'wenn Zelle =0
+    If u = 1 Then
+        ActiveSheet.Rows(Zeile & ":" & Zeile).Delete
+        u = 0
+    End If
+Next
+
+    Range("B1").Select
+    Selection.ClearContents
+    ActiveCell.FormulaR1C1 = "0"
+    Range("B2").Select
+    ActiveCell.FormulaR1C1 = "=IF(RC[-1]=""Keywords"",R[-1]C+1,R[-1]C)"
+    Range("C1").Select
+    ActiveCell.FormulaR1C1 = _
+        "=IF(ISNA(VLOOKUP(RC[-1],SverweisTabellen!C[-1]:C,2,FALSE)),"""",VLOOKUP(RC[-1],SverweisTabellen!C[-1]:C,2,FALSE))"
+    Range("C1").Select
+    Selection.AutoFill Destination:=Range("C1:C100000")
+    Range("B2").Select
+    Selection.AutoFill Destination:=Range("B2:B100000")
+    Range("D1").Select
+    ActiveCell.FormulaR1C1 = _
+        "=IF(ISNA(VLOOKUP(RC[-2],SverweisTabellen!C[-2]:C,3,FALSE)),"""",VLOOKUP(RC[-2],SverweisTabellen!C[-2]:C,3,FALSE))"
+    Range("D1").Select
+    Selection.AutoFill Destination:=Range("D1:D100000")
+Columns("C:C").Select
+    Selection.Copy
+    Columns("C:C").Select
+    Selection.PasteSpecial Paste:=xlPasteValues, Operation:=xlNone, SkipBlanks _
+        :=False, Transpose:=False
+Columns("D:D").Select
+    Selection.Copy
+    Columns("D:D").Select
+    Selection.PasteSpecial Paste:=xlPasteValues, Operation:=xlNone, SkipBlanks _
+        :=False, Transpose:=False
+Columns("B:B").Select
+    Selection.Copy
+    Columns("B:B").Select
+    Selection.PasteSpecial Paste:=xlPasteValues, Operation:=xlNone, SkipBlanks _
+        :=False, Transpose:=False
+Dim Zeile2%
+Dim y
+
+For Zeile = ActiveSheet.Cells(Rows.Count, 2).End(xlUp).Row To 1 Step -1
+    If Cells(Zeile, 2) = "0" Then y = 1 'wenn Zelle =0
+    If y = 1 Then
+        ActiveSheet.Rows(Zeile & ":" & Zeile).Delete
+        y = 0
+    End If
+Next
+ ''
+Range("B1").Select
+    Application.CutCopyMode = False
+    ActiveCell.FormulaR1C1 = "=IF(RC[-1]=""Keywords"",""start"",""X"")"
+    Range("B1").Select
+    Selection.AutoFill Destination:=Range("B1:B100000")
+Columns("B:B").Select
+    Selection.Copy
+    Columns("B:B").Select
+    Selection.PasteSpecial Paste:=xlPasteValues, Operation:=xlNone, SkipBlanks _
+        :=False, Transpose:=False
+
+Dim Zelle2 As Range
+
+For Each Zelle2 In ActiveSheet.Range("B:B")
+
+If Zelle2.Value = "X" Then
+Zelle2.ClearContents
+End If
+Next
+
+Range("E1").Select
+    ActiveCell.FormulaR1C1 = "1"
+    Range("E2").Select
+    ActiveCell.FormulaR1C1 = "=IF(RC[-3]=""start"",1+R[-1]C,R[-1]C)"
+    Range("E2").Select
+    Selection.AutoFill Destination:=Range("E2:E100000")
+    Range("E2:E9000").Select
+Columns("C:C").Select
+    Selection.Font.Bold = True
+
+
+
+End Sub
+
+--------------------------------------------------------------------------------
+
+Sub Neues_Worksheet()
+
+Dim blatt As Object
+Dim Blattname As String
+Dim bloFlg As Boolean
+Dim neuname As String
+Dim HK1 As String
+
+Blattname = ActiveCell.Offset(0, 3)
+neuname = ActiveCell.Offset(0, 3)
+
+HK1 = ActiveCell.Offset(0, 1).Address
+HK0Start = ActiveCell.Offset(1, -2).Address
+HK0Ende = ActiveCell.Offset(51, -1).Address
+
+Worksheets("SverweisTabellen").Select
+Range("R3").Select
+BasisStart = ActiveCell.Offset(0, 0).Address
+BasisEnde = ActiveCell.Offset(80, 10).Address
+
+For Each blatt In Sheets
+  If blatt.Name = Blattname Then bolflg = True
+Next blatt
+
+
+If bolflg = False Then
+  With ThisWorkbook
+    Sheets.Add After:=Sheets(Worksheets.Count)
+    ActiveSheet.Name = neuname
+ End With
+
+With Worksheets("SverweisTabellen")
+.Range(BasisStart, BasisEnde).Copy Worksheets(neuname).Range("A1")
+End With
+
+With Worksheets("Tabelle1")
+.Range(HK1).Copy Worksheets(neuname).Range("C1")
+.Range(HK0Start, HK0Ende).Copy Worksheets(neuname).Range("A29")
+End With
+
+End If
+
+With Sheets(neuname)
+        .Columns("A:A").ColumnWidth = 38
+        .Columns("B:B").ColumnWidth = 3
+        .Columns("C:C").ColumnWidth = 16.75
+        .Columns("D:D").ColumnWidth = 3
+        .Columns("E:E").ColumnWidth = 60
+        .Columns("F:F").ColumnWidth = 3
+        .Columns("G:G").ColumnWidth = 60
+        .Columns("H:H").ColumnWidth = 3
+        .Columns("I:I").ColumnWidth = 60
+        .Columns("J:J").ColumnWidth = 3
+
+ActiveWindow.Zoom = 70
+End With
+Worksheets("Tabelle1").Select
+End Sub
+
+--------------------------------------------------------------------------------
+
+Sub Wiederholen_Neues_Worksheet()
+Dim lAnzahl As String
+Dim i As Long
+Dim x As String
+
+Sheets("Tabelle1").Select
+
+x = Application.WorksheetFunction.CountIf(Range("C:C"), "start")
+
+Range("C1").Select
+
+Anf:
+lAnzahl = (x)
+' Prüfen ob eine Zahl eingegeben wurde
+If IsNumeric(lAnzahl) Then
+For i = 1 To CLng(lAnzahl)
+
+Application.SendKeys "(^+y)"
+Application.Wait (True)
+Application.SendKeys "(^{Down})"
+
+Next i
+Else
+    MsgBox "Stoppen Sie mit Strg+Unt", vbInformation
+GoTo Anf
+End If
+
+End Sub
+
+--------------------------------------------------------------------------------
+
+Sub AutosaveOn_Check()
+
+If AutoSaveOn = True Then
+    AutoSaveOn = False
+    Exit Sub
+    Else
+End If
+
+End Sub
+
+--------------------------------------------------------------------------------
+
+Sub Unter_50_löschen()
+x = 50
+
+Anf:
+lAnzahl = x
+If IsNumeric(lAnzahl) Then
+For i = 1 To CLng(lAnzahl)
+
+With Sheets(ActiveSheet.Name)
+
+
+     If ActiveCell.Text = "Keywords" Then
+        .Range(.Range(ActiveCell.Address), .Range(ActiveCell.Address).End(xlDown)).Select
+        Selection.Clear
+        .Range(.Range(ActiveCell.Offset(0, 1).Address), .Range(ActiveCell.Offset(0, 1).Address).End(xlDown)).Select
+        Selection.Clear
+        Else
+        Cells(Selection.Row + 1, Selection.Column).Select
+
+    End If
+End With
+
+Next i
+Else
+    MsgBox "mit strg+untbr abbrechen"
+GoTo Anf
+End If
+
+End Sub
+
+--------------------------------------------------------------------------------
+
+Sub Unter_50_löschen_wiederholen()
+x = 311
+
+Anf:
+lAnzahl = x
+If IsNumeric(lAnzahl) Then
+For i = 1 To CLng(lAnzahl)
+
+Range("A29").Select
+Call Unter_50_löschen
+ActiveSheet.Next.Select
+
+
+Next i
+Else
+    MsgBox "mit strg+untbr abbrechen"
+GoTo Anf
+End If
+End Sub
+
+--------------------------------------------------------------------------------
+
+Sub Leere_Zeile_über_Keyword_einfügen()
+Sheets("Tabelle1").Select
+For Zeile = ActiveSheet.Cells(Rows.Count, 1).End(xlUp).Row To 1 Step -1
+    If Cells(Zeile, 1) = "Keywords" Then u = 1
+    If u = 1 Then
+        ActiveSheet.Rows(Zeile & ":" & Zeile).Insert Shift:=xlUp
+        u = 0
+    End If
+Next
+
+End Sub
+
+--------------------------------------------------------------------------------
+
+Sub Kundenexport()
+
+a = Worksheets("SverweisTabellen").Cells(2, 6).Value
+b = ActiveWorkbook.Name
+b = Left(b, Len(b) - 5)
+
+    Dim wkbMappe As Workbook
+    Set wkbMappe = Workbooks.Add
+
+    wkbMappe.SaveAs a & b & " - KundenExport" & ".xlsx"
+    Sheets("Tabelle1").Select
+    Sheets("Tabelle1").Name = "Übersicht"
+    c = ActiveWorkbook.Name
+    Windows(b).Activate
+    Columns("B:M").Select
+    Selection.Copy
+    Windows(c).Activate
+    Columns("A:A").Select
+    Selection.PasteSpecial Paste:=xlPasteValues, Operation:=xlNone, SkipBlanks _
+        :=False, Transpose:=False
+    ActiveWindow.Zoom = 70
+    Windows(b).Activate
+    Selection.Copy
+    Windows(c).Activate
+    Columns("A:L").Select
+    Selection.PasteSpecial Paste:=xlPasteFormats, Operation:=xlNone, _
+        SkipBlanks:=False, Transpose:=False
+    Application.CutCopyMode = False
+    Columns("A:A").EntireColumn.AutoFit
+    Columns("B:B").ColumnWidth = 41.13
+    Columns("B:B").EntireColumn.AutoFit
+    Columns("D:D").ColumnWidth = 17.38
+    Columns("E:E").ColumnWidth = 13.88
+    Columns("F:F").EntireColumn.AutoFit
+    Columns("G:G").EntireColumn.AutoFit
+    Columns("H:H").EntireColumn.AutoFit
+    Columns("I:I").ColumnWidth = 11.25
+    Columns("J:J").ColumnWidth = 9.88
+    Columns("K:K").ColumnWidth = 12.88
+    Columns("L:L").ColumnWidth = 11
+    Columns("M:M").ColumnWidth = 9.88
+
+    wkbMappe.Save
+    MsgBox "Kunden-Export erfolgreich gespeichert."
+    wkbMappe.Close
+End Sub
+
+--------------------------------------------------------------------------------
+
+Sub Leere_Zeilen_löschen()
+
+Dim Zeile As Long
+
+Dim u As Long
+
+Sheets("Tabelle1").Activate
+For Zeile = ActiveSheet.Cells(Rows.Count, 1).End(xlUp).Row To 1 Step -1
+    If Cells(Zeile, 1) = "" Then u = 1 'wenn Zelle =0
+    If u = 1 Then
+        ActiveSheet.Rows(Zeile & ":" & Zeile).Delete
+        u = 0
+    End If
+Next
+End Sub
+
+--------------------------------------------------------------------------------
+
+Sub Zellinhalt_80Zeichen_setzen_und_1000_Zeilen_Blöcke()
+Dim x As Long
+Dim Zeile As Long
+
+Dim u As Long
+
+
+For Zeile = ActiveSheet.Cells(Rows.Count, 1).End(xlUp).Row To 1 Step -1
+    If Cells(Zeile, 1) = "Keywords" Then u = 1 'wenn Zelle =0
+    If u = 1 Then
+        ActiveSheet.Rows(Zeile & ":" & Zeile).Delete
+        u = 0
+    End If
+Next
+
+Range("B1").Select
+    ActiveCell.FormulaR1C1 = "=LEFT(RC[-1],80)"
+    Range("B1").Select
+    Selection.AutoFill Destination:=Range("B1:B50000")
+    Range("B1:B1001").Select
+
+Range("A1").Select
+
+For x = 1 To 50
+
+i = ActiveCell.Row
+    ActiveSheet.Rows(i).Insert Shift:=xlUp 'eine Zeile oberhalb einfügen
+    ActiveSheet.Rows(i + 1001).Select 'in die neu eingefügte Zelle springen
+Next
+End Sub
+
+--------------------------------------------------------------------------------
+
+Sub Check_ob_mehr_als_3_x_ausgewählt()
+Z = Application.WorksheetFunction.CountIf(Range("B15:B25"), "x")
+
+If Z < 3 Then
+ActiveCell.Value = "x"
+
+Else
+
+MsgBox "Bitte höchstens 3 Titel auswählen"
+End If
+
+End Sub
+
+--------------------------------------------------------------------------------
+
+Sub MatrixFormel_formatieren()
+'
+' Makro575Matrix Makro
+Application.Calculation = xlCalculationManual
+With Sheets("Sverweistabellen")
+Z = WorksheetFunction.CountBlank(Range("C5:C404"))
+End With
+
+Anf:
+lAnzahl = (400 - Z)
+' Prüfen ob eine Zahl eingegeben wurde
+If IsNumeric(lAnzahl) Then
+For i = 1 To CLng(lAnzahl)
+
+x = ActiveCell.Formula
+ActiveCell.FormulaArray = x
+Cells(Selection.Row + 1, Selection.Column).Select
+Next i
+Else
+    MsgBox "mit strg+untbr abbrechen"
+GoTo Anf
+End If
+Application.Calculation = xlCalculationAutomatic
+End Sub
+
+--------------------------------------------------------------------------------
+
+Sub Export_für_Tester()
+
+Call Status_Aktualisieren_Titel_exportiert
+
+ActiveWorkbook.Save
+'
+a = Worksheets("SverweisTabellen").Cells(2, 6).Value
+b = ActiveWorkbook.Name
+b = Left(b, Len(b) - 5)
+'
+'
+'
+Sheets("SverweisTabellen").Select
+x = Application.WorksheetFunction.CountA(Range("C:C"))
+
+Call AutosaveOn_Check
+
+Call Longtailsummen
+
+Call Übersicht_alle_außer_exportiert_löschen
+
+Sheets.Add After:=Sheets(Sheets.Count)
+Sheets("1").Select
+
+Anf:
+lAnzahl = (x - 1)
+' Prüfen ob eine Zahl eingegeben wurde
+If IsNumeric(lAnzahl) Then
+For i = 1 To CLng(lAnzahl)
+
+Call Export_test_löschen
+
+Next i
+Else
+    MsgBox "mit strg+untbr abbrechen"
+GoTo Anf
+End If
+
+Application.DisplayAlerts = False
+Sheets(Array("SverweisTabellen", "Tabelle1")).Delete
+Application.DisplayAlerts = True
+
+
+Dim FName As String
+Dim FPath As String
+Dim t As String
+
+t = Worksheets("Übersicht").Cells(1, 16).Value
+
+FName = b & " - TexterExport.xlsx"
+FPath = a
+Application.DisplayAlerts = False
+ActiveWorkbook.SaveAs Filename:=FPath & FName _
+        , FileFormat:=51, Password:="", WriteResPassword:="", _
+        ReadOnlyRecommended:=False, CreateBackup:=False
+Application.DisplayAlerts = True
+Sheets("Übersicht").Select
+ Range("P8:Q14").Select
+    Selection.Copy
+    Range("P1").Select
+    ActiveSheet.Paste
+ Range("N8:Q14").Select
+    Selection.Copy
+    Range("N1").Select
+    ActiveSheet.Paste
+Range("A1").Select
+ActiveWorkbook.Save
+
+End Sub
+
+--------------------------------------------------------------------------------
+
+Sub Status_Aktualisieren_Titel_exportiert()
+Sheets("SverweisTabellen").Select
+x = Application.WorksheetFunction.CountA(Range("C:C"))
+Sheets("Übersicht").Select
+t = Range("P1").Value
+t = (t + 1)
+Range("P1").Value = t
+
+Range("L2").Select
+Application.Calculation = xlCalculationManual
+
+Anfl:
+    ljAnzahl = (x - 2)
+
+    If IsNumeric(ljAnzahl) Then
+     For j = 1 To CLng(ljAnzahl)
+        If ActiveCell.Value = "Titel ausgewählt" Then
+            ActiveCell.Value = "Titel Exportiert" & "(" & t & ")"
+            ActiveCell.Offset(0, 1).Value = Date
+        Else
+            Cells(Selection.Row + 1, Selection.Column).Select
+        End If
+
+     Next j
+    Else
+        MsgBox "Bitte ein Zahl eingeben !", vbInformation
+        GoTo Anfl
+    End If
+
+Application.Calculation = xlCalculationAutomatic
+
+End Sub
+
+--------------------------------------------------------------------------------
+
+Sub Longtailsummen()
+
+Sheets("Übersicht").Select
+Columns("C:E").Select
+    Selection.Copy
+    Columns("C:E").Select
+       On Error GoTo ErrorHandler
+   Selection.PasteSpecial Paste:=xlPasteValues, Operation:=xlNone, SkipBlanks _
+        :=False, Transpose:=False
+        Exit Sub
+
+ErrorHandler:
+   Columns("A:M").Select
+    Selection.AutoFilter
+    Columns("C:E").Select
+    Selection.Copy
+    Columns("C:E").Select
+    Selection.PasteSpecial Paste:=xlPasteValues, Operation:=xlNone, SkipBlanks _
+        :=False, Transpose:=False
+   Resume Next
+
+End Sub
+
+--------------------------------------------------------------------------------
+
+Sub Übersicht_alle_außer_exportiert_löschen()
+
+Sheets("SverweisTabellen").Select
+x = Application.WorksheetFunction.CountA(Range("C:C"))
+Sheets("Übersicht").Select
+t = Range("P1").Value
+
+Range("L2").Select
+Application.Calculation = xlCalculationManual
+
+Anf:
+    lAnzahl = (x - 2)
+    If IsNumeric(lAnzahl) Then
+     For i = 1 To CLng(lAnzahl)
+        If ActiveCell.Value = "freigegeben" Then
+            Cells(Selection.Row + 1, Selection.Column).Select
+        Else
+            ActiveCell.EntireRow.Delete
+        End If
+
+     Next i
+    Else
+        MsgBox "Bitte ein Zahl eingeben !", vbInformation
+        GoTo Anf
+    End If
+Application.Calculation = xlCalculationAutomatic
+End Sub
+
+--------------------------------------------------------------------------------
+
+Sub Export_test_löschen()
+
+t = Worksheets("Übersicht").Cells(1, 16).Value
+Application.DisplayAlerts = False
+
+If Range("C2").Value = "freigegeben" Then
+
+Range("A14:A25").Select
+    Selection.Copy
+    Selection.PasteSpecial Paste:=xlPasteValues, Operation:=xlNone, SkipBlanks _
+        :=False, Transpose:=False
+
+ActiveSheet.Range("D1:J200").Clear
+ActiveSheet.Range("B3:B10").Clear
+ActiveSheet.Range("D3:D10").Clear
+ActiveSheet.Range("B29:B79").Clear
+Range("A3:A10").Select
+Selection.EntireRow.Delete
+Columns("A:Z").EntireColumn.AutoFit
+ActiveSheet.Next.Select
+
+Else
+ActiveSheet.Delete
+Application.DisplayAlerts = True
+End If
+
+
+End Sub
+
+--------------------------------------------------------------------------------
+
+Sub Links_ändern()
+
+Sheets("SverweisTabellen").Select
+x = Application.WorksheetFunction.CountA(Range("D:D"))
+
+Sheets("1").Select
+
+Anf:
+lAnzahl = x
+If IsNumeric(lAnzahl) Then
+For i = 1 To CLng(lAnzahl)
+
+Range("A2").Select
+Selection.ClearContents
+    ActiveSheet.Hyperlinks.Add Anchor:=Selection, Address:="", SubAddress:= _
+        "Übersicht!A1", TextToDisplay:="Übersicht"
+
+Range("B2").Select
+    ActiveCell.FormulaR1C1 = _
+        "=MID(CELL(""Dateiname"",R[-1]C[-1]),FIND(""]"",CELL(""Dateiname"",R[-1]C[-1]))+1,31)"
+    Range("C2").Select
+    ActiveCell.FormulaR1C1 = "=IFNA(VLOOKUP(RC[-1],Übersicht!C[-2]:C[10],12,FALSE),"""")"
+ActiveSheet.Next.Select
+
+
+Next i
+Else
+    MsgBox "mit strg+untbr abbrechen"
+GoTo Anf
+End If
+End Sub
+
+--------------------------------------------------------------------------------
+
+Sub Links_generieren()
+
+Z = 311
+
+Anf:
+lAnzahl = Z
+
+If IsNumeric(lAnzahl) Then
+For i = 1 To CLng(lAnzahl)
+
+
+x = ActiveCell.Value
+
+
+ActiveSheet.Hyperlinks.Add Anchor:=Selection, Address:="", SubAddress:= _
+        "'" & x & "'!A1"
+
+        Cells(Selection.Row + 1, Selection.Column).Select
+Next i
+Else
+    MsgBox "mit strg+untbr abbrechen"
+GoTo Anf
+End If
+
+
+
+End Sub
+
+--------------------------------------------------------------------------------

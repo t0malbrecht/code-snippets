@@ -1,0 +1,106 @@
+Sub Reihen_Duplizieren()
+Dim Zelle1 As Range
+Dim Zelle2 As Range
+
+AnzahlReihen = 978
+AnzahlDuplizierungen = 10
+
+With Sheets(ActiveSheet.Name)
+For i = 1 To CLng(AnzahlReihen)
+
+    For j = 1 To CLng(AnzahlDuplizierungen)
+
+    Set Zelle1 = ActiveCell
+    ActiveCell.Rows("1:1").EntireRow.Select
+    Selection.Copy
+    Zelle1.Select
+    ActiveCell.Offset(1, 0).Rows("1:1").EntireRow.Select
+    Selection.Insert Shift:=xlDown
+    Zelle1.Offset(1, 0).Select
+
+    Next j
+    ActiveCell.Offset(1, 0).Select
+
+Next i
+End With
+
+End Sub
+
+--------------------------------------------------------------------------------
+
+Sub Reihen_randomisieren()
+
+Sheets("Tabelle1").Select
+AnzahlReihen = 300
+
+For i = 1 To CLng(AnzahlReihen)
+    While ActiveCell.Value <> ""
+        With Application.WorksheetFunction
+
+            x = .RandBetween(3, 4)
+            If x = 3 Then
+                ActiveCell.Select
+                Selection.Delete Shift:=xlToLeft
+            Else
+                ActiveCell.Offset(0, 1).Select
+
+        End If
+        End With
+
+    Wend
+    ActiveCell.End(xlToLeft).Select
+    ActiveCell.End(xlToLeft).Select
+    ActiveCell.Offset(0, 1).Select
+    ActiveCell.Offset(1, 0).Select
+Next i
+
+
+End Sub
+
+--------------------------------------------------------------------------------
+
+Sub Reihen_transponieren()
+Dim Zelle1 As Range
+Dim Zelle2 As Range
+
+Sheets("datensatz").Select
+Cells(3, 2).Select
+
+With Sheets(ActiveSheet.Name)
+
+x = 5000
+
+Anf:
+lAnzahl = x
+For i = 1 To CLng(lAnzahl)
+
+
+    Set Zelle1 = ActiveCell
+    .Range(.Range(ActiveCell.Address), .Range(ActiveCell.Address).End(xlDown)).Select
+    Selection.Copy
+    Zelle1.Select
+    ActiveCell.Offset(0, 1).Select
+    Selection.PasteSpecial Paste:=xlPasteAll, Operation:=xlNone, SkipBlanks:= _
+        False, Transpose:=True
+    ActiveCell.Offset(0, -1).Select
+    ActiveCell.End(xlDown).Select
+    ActiveCell.End(xlDown).Select
+
+    Next i
+
+End With
+End Sub
+
+--------------------------------------------------------------------------------
+
+Sub Leere_Reihe_nach_Auflistung()
+
+Sheets("datensatz").Select
+For Zeile = ActiveSheet.Cells(Rows.Count, 1).End(xlUp).Row To 1 Step -1
+    If Cells(Zeile, 3) = "x" Then u = 1
+    If u = 1 Then
+        ActiveSheet.Rows(Zeile & ":" & Zeile).Insert Shift:=xlUp
+        u = 0
+    End If
+Next
+End Sub
